@@ -1,0 +1,191 @@
+name: WMC Earnings Calculator
+
+on:
+  workflow_dispatch:
+    inputs:
+      hourly_rate:
+        description: "Gross hourly rate ($/h), e.g. 25.00"
+        required: true
+        default: "25.00"
+      shift_start:
+        description: "Shift start time (HH:MM, 24-hour), e.g. 09:00"
+        required: true
+        default: "09:00"
+      shift_end:
+        description: "Shift end time (HH:MM, 24-hour), e.g. 17:00"
+        required: true
+        default: "17:00"
+      break_start:
+        description: "Break start time (HH:MM, 24-hour) — leave blank for no break"
+        required: false
+        default: ""
+      break_end:
+        description: "Break end time (HH:MM, 24-hour) — leave blank for no break"
+        required: false
+        default: ""
+      daily_expense:
+        description: "Total daily expenses to subtract ($), e.g. 5.00"
+        required: false
+        default: "0.00"
+
+jobs:
+  calculate:
+    name: Calculate Earnings Breakdown
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Run earnings calculation
+        uses: actions/github-script@v7
+        env:
+          WMC_HOURLY_RATE:   ${{ inputs.hourly_rate }}
+          WMC_SHIFT_START:   ${{ inputs.shift_start }}
+          WMC_SHIFT_END:     ${{ inputs.shift_end }}
+          WMC_BREAK_START:   ${{ inputs.break_start }}
+          WMC_BREAK_END:     ${{ inputs.break_end }}
+          WMC_DAILY_EXPENSE: ${{ inputs.daily_expense }}
+        with:
+          script: |
+            // ── helpers ──────────────────────────────────────────────────────
+            function parseTime(str) {
+              if (!str || !str.trim()) return null;
+              const parts = str.trim().split(':');
+              if (parts.length !== 2) return null;
+              const h = parseInt(parts[0], 10);
+              const m = parseInt(parts[1], 10);
+              if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) return null;
+              return h * 60 + m;
+            }
+
+            function fmt(n) { return n.toFixed(2); }
+            function fmtTime(mins) {
+              const h = Math.floor(mins / 60);
+              const m = mins % 60;
+              return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            }
+
+            // ── inputs (read from env vars to avoid script injection) ─────────
+            const hourlyRate    = parseFloat(process.env.WMC_HOURLY_RATE);
+            const shiftStart    = parseTime(process.env.WMC_SHIFT_START);
+            const shiftEnd      = parseTime(process.env.WMC_SHIFT_END);
+            const breakStart    = parseTime(process.env.WMC_BREAK_START);
+            const breakEnd      = parseTime(process.env.WMC_BREAK_END);
+            const dailyExpense  = parseFloat(process.env.WMC_DAILY_EXPENSE) || 0;
+
+            // ── validation ───────────────────────────────────────────────────
+            const errors = [];
+            if (isNaN(hourlyRate) || hourlyRate <= 0)
+              errors.push('hourly_rate must be a positive number');
+            if (shiftStart === null)
+              errors.push('shift_start is missing or invalid (expected HH:MM)');
+            if (shiftEnd === null)
+              errors.push('shift_end is missing or invalid (expected HH:MM)');
+            if (shiftStart !== null && shiftEnd !== null && shiftStart >= shiftEnd)
+              errors.push('shift_end must be after shift_start');
+            if ((breakStart !== null) !== (breakEnd !== null))
+              errors.push('break_start and break_end must both be provided or both left blank');
+            if (breakStart !== null && breakEnd !== null && breakStart >= breakEnd)
+              errors.push('break_end must be after break_start');
+
+            if (errors.length > 0) {
+              core.setFailed('Validation failed:\n' + errors.map(e => '  ✗ ' + e).join('\n'));
+              return;
+            }
+
+            // ── current time (UTC — adjust TZ via TZ env var if needed) ─────
+            const now     = new Date();
+            const nowMin  = now.getHours() * 60 + now.getMinutes();
+            const nowSec  = now.getSeconds();
+
+            // ── active-minutes calculation ───────────────────────────────────
+            function activeMinutes(nowMin, start, end, bStart, bEnd) {
+              if (start === null || end === null) return 0;
+              if (start >= end) return 0;
+
+              let intervals = [];
+              if (bStart !== null && bEnd !== null && bStart < bEnd) {
+                const effBs = Math.max(bStart, start);
+                const effBe = Math.min(bEnd, end);
+                if (effBs < effBe) {
+                  if (start < effBs)  intervals.push([start, effBs]);
+                  if (effBe < end)    intervals.push([effBe, end]);
+                } else {
+                  intervals.push([start, end]);
+                }
+              } else {
+                intervals.push([start, end]);
+              }
+
+              let total = 0;
+              for (const [s, e] of intervals) {
+                const os = Math.max(s, 0);
+                const oe = Math.min(e, nowMin);
+                if (oe > os) total += oe - os;
+              }
+              return total;
+            }
+
+            // ── compute ──────────────────────────────────────────────────────
+            const workMins     = shiftEnd - shiftStart;
+            const breakMins    = (breakStart !== null && breakEnd !== null)
+                                  ? Math.max(0, Math.min(breakEnd, shiftEnd) - Math.max(breakStart, shiftStart))
+                                  : 0;
+            const netWorkMins  = workMins - breakMins;
+
+            const activeMins   = activeMinutes(nowMin, shiftStart, shiftEnd, breakStart, breakEnd);
+            const earned       = (activeMins / 60) * hourlyRate;
+
+            const dayFraction  = (nowMin * 60 + nowSec) / 86400;
+            const expSoFar     = dailyExpense * dayFraction;
+            const netEarned    = earned - expSoFar;
+
+            const isActive     = nowMin >= shiftStart && nowMin < shiftEnd &&
+                                  !(breakStart !== null && breakEnd !== null && nowMin >= breakStart && nowMin < breakEnd);
+            const netHourly    = (isActive ? hourlyRate : 0) - (dailyExpense / 24);
+            const netPerMin    = netHourly / 60;
+            const netPerSec    = netHourly / 3600;
+
+            // ── print breakdown ──────────────────────────────────────────────
+            const line = '─'.repeat(54);
+            const lines = [
+              '',
+              '╔══════════════════════════════════════════════════════╗',
+              '║          ⏳  WMC Earnings Breakdown                  ║',
+              '╚══════════════════════════════════════════════════════╝',
+              '',
+              `  Calculated at : ${now.toISOString()}`,
+              '',
+              line,
+              '  SHIFT',
+              line,
+              `  Rate             : $${fmt(hourlyRate)}/h`,
+              `  Shift            : ${fmtTime(shiftStart)} → ${fmtTime(shiftEnd)}  (${workMins} min total)`,
+              breakMins > 0
+                ? `  Break            : ${fmtTime(breakStart)} → ${fmtTime(breakEnd)}  (${breakMins} min deducted)`
+                : '  Break            : none',
+              `  Net work time    : ${netWorkMins} min  (full shift)`,
+              '',
+              line,
+              '  EARNINGS SO FAR TODAY',
+              line,
+              `  Active minutes   : ${activeMins} min`,
+              `  Gross earned     : $${fmt(earned)}`,
+              `  Expenses so far  : -$${fmt(expSoFar)}  (daily $${fmt(dailyExpense)} prorated ${(dayFraction*100).toFixed(1)}%)`,
+              `  Net earned       : $${fmt(netEarned)}`,
+              '',
+              line,
+              '  LIVE RATES (current moment)',
+              line,
+              `  Working now?     : ${isActive ? '✅ yes' : '⏸  no (before shift / in break / after shift)'}`,
+              `  Net / hour       : $${fmt(netHourly)}`,
+              `  Net / minute     : $${fmt(netPerMin)}`,
+              `  Net / second     : ${fmt(netPerSec * 100)}¢`,
+              '',
+              line,
+            ];
+
+            const output = lines.join('\n');
+            console.log(output);
+            core.summary.addRaw('```\n' + output + '\n```');
+            await core.summary.write();

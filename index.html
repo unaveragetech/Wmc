@@ -6,11 +6,12 @@
     <title>Workman's Clock · real‑time earnings</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-        body { background: #f0f4f8; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
+        body { background: #f0f4f8; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 24px 16px; }
         .card { max-width: 900px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 28px 24px; }
-        h1 { font-size: 2rem; font-weight: 600; margin: 0 0 8px 0; color: #0b2b40; display: flex; align-items: center; gap: 10px; }
+        h1 { font-size: 2rem; font-weight: 600; margin: 0 0 4px 0; color: #0b2b40; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         h1 small { font-size: 0.9rem; font-weight: 400; color: #3a5e6b; background: #e6f0f3; padding: 4px 12px; border-radius: 40px; }
-        .live-panel { background: linear-gradient(145deg, #0f2e3f, #1a4450); color: white; border-radius: 24px; padding: 28px 24px; margin: 24px 0 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 8px 18px rgba(0,40,50,0.3); }
+        .subtitle { font-size: 0.92rem; color: #5a7a88; margin: 0 0 4px; }
+        .live-panel { background: linear-gradient(145deg, #0f2e3f, #1a4450); color: white; border-radius: 24px; padding: 28px 24px; margin: 20px 0 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 8px 18px rgba(0,40,50,0.3); }
         .rate-item { text-align: center; min-width: 100px; }
         .rate-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 6px; }
         .rate-value { font-size: 2.4rem; font-weight: 700; line-height: 1; }
@@ -18,26 +19,60 @@
         .total-today { background: #2c5f6e; padding: 14px 28px; border-radius: 60px; display: flex; align-items: baseline; gap: 12px; }
         .total-today .rate-label { margin: 0; }
         .total-today .rate-value { font-size: 2.2rem; }
-        section { margin: 32px 0 24px; border-top: 2px solid #dbe7ed; padding-top: 24px; }
-        .section-title { font-weight: 600; font-size: 1.3rem; color: #174450; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+        section { margin: 28px 0 20px; border-top: 2px solid #dbe7ed; padding-top: 22px; }
+        .section-title { font-weight: 600; font-size: 1.3rem; color: #174450; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
         .income-grid, .expense-grid { display: flex; flex-direction: column; gap: 20px; }
-        .income-card, .expense-card, .onetime-card { background: #f9fcff; border: 1px solid #cbdae4; border-radius: 20px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .row { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-bottom: 12px; }
+        .income-card, .expense-card, .onetime-card { background: #f9fcff; border: 1px solid #cbdae4; border-radius: 20px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); margin-bottom: 14px; }
+        .income-card.has-error, .expense-card.has-error, .onetime-card.has-error { border-color: #e08090; background: #fff6f8; }
+        .row { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-start; }
         .field { display: flex; flex-direction: column; min-width: 100px; }
         .field label { font-size: 0.8rem; font-weight: 600; color: #1f5060; margin-bottom: 4px; }
         input, select { background: white; border: 1px solid #b3c9d4; border-radius: 30px; padding: 10px 16px; font-size: 0.95rem; outline: none; transition: 0.15s; }
         input:focus, select:focus { border-color: #2b7a8a; box-shadow: 0 0 0 3px rgba(43,122,138,0.2); }
+        input.field-error { border-color: #d9536a !important; box-shadow: 0 0 0 3px rgba(217,83,106,0.18) !important; }
+        .field-msg { font-size: 0.75rem; color: #c0364a; margin-top: 4px; padding-left: 4px; display: none; }
+        .field-msg.visible { display: block; }
         .break-fields { display: flex; flex-wrap: wrap; gap: 16px; margin-left: 8px; padding-left: 16px; border-left: 2px dashed #a0c0cc; }
-        .btn-add { background: #e2ecf1; border: none; border-radius: 60px; padding: 12px 24px; font-weight: 600; color: #11596c; cursor: pointer; font-size: 0.95rem; transition: 0.15s; border: 1px solid transparent; }
+        .btn-add { background: #e2ecf1; border: 1px solid transparent; border-radius: 60px; padding: 10px 22px; font-weight: 600; color: #11596c; cursor: pointer; font-size: 0.92rem; transition: 0.15s; }
         .btn-add:hover { background: #cde0e9; border-color: #86aebf; }
-        .btn-remove { background: none; border: 1px solid #d0aeb6; color: #a1414f; border-radius: 30px; padding: 6px 16px; font-size: 0.8rem; cursor: pointer; margin-left: auto; }
+        .btn-remove { background: none; border: 1px solid #d0aeb6; color: #a1414f; border-radius: 30px; padding: 6px 16px; font-size: 0.8rem; cursor: pointer; margin-left: auto; flex-shrink: 0; }
         .btn-remove:hover { background: #ffeaee; }
+        .btn-calculate { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #0f7a8c, #185f70); color: white; border: none; border-radius: 60px; padding: 14px 32px; font-size: 1.05rem; font-weight: 700; cursor: pointer; margin: 28px auto 0; transition: 0.18s; box-shadow: 0 6px 18px rgba(15,122,140,0.35); }
+        .btn-calculate:hover { background: linear-gradient(135deg, #0d6a7b, #124f5f); box-shadow: 0 8px 24px rgba(15,122,140,0.45); transform: translateY(-1px); }
+        .btn-calculate:active { transform: translateY(0); }
+        .validation-box { background: #fff2f4; border: 1.5px solid #e08090; border-radius: 16px; padding: 14px 20px; margin: 16px 0 0; display: none; }
+        .validation-box.visible { display: block; }
+        .validation-box ul { margin: 6px 0 0; padding-left: 20px; }
+        .validation-box li { font-size: 0.88rem; color: #b02030; margin: 3px 0; }
+        .validation-title { font-weight: 700; color: #a01828; font-size: 0.95rem; }
+        .breakdown-panel { background: #f4faff; border: 1.5px solid #b3d4e4; border-radius: 24px; padding: 24px; margin-top: 24px; display: none; }
+        .breakdown-panel.visible { display: block; }
+        .breakdown-panel h2 { font-size: 1.25rem; color: #0b3040; margin: 0 0 18px; display: flex; align-items: center; gap: 8px; }
+        .bd-section { margin-bottom: 20px; }
+        .bd-section-title { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1.2px; color: #2a6878; font-weight: 700; margin-bottom: 10px; border-bottom: 1px solid #c5dce8; padding-bottom: 6px; }
+        .bd-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed #daeaf0; font-size: 0.93rem; color: #1a3d4a; flex-wrap: wrap; gap: 4px; }
+        .bd-row:last-child { border-bottom: none; }
+        .bd-label { flex: 1; }
+        .bd-sub { font-size: 0.8rem; color: #5a7a88; margin-left: 8px; }
+        .bd-value { font-weight: 700; white-space: nowrap; }
+        .bd-value.positive { color: #0d7a50; }
+        .bd-value.negative { color: #a01828; }
+        .bd-value.neutral { color: #1a3d4a; }
+        .bd-total { background: linear-gradient(135deg, #0f2e3f, #1a4450); color: white; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+        .bd-total-label { font-size: 1rem; opacity: 0.85; }
+        .bd-total-value { font-size: 1.8rem; font-weight: 700; }
+        .bd-total-value.pos { color: #5febb0; }
+        .bd-total-value.neg { color: #ff8fa0; }
+        .bd-status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-left: 8px; }
+        .bd-status-pill.active { background: #d4fce9; color: #0a6038; }
+        .bd-status-pill.inactive { background: #e8e8e8; color: #555; }
         .footer-note { font-size: 0.85rem; color: #456b78; margin-top: 28px; text-align: center; border-top: 1px dashed #b8d0da; padding-top: 20px; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>⏳ workman's clock wmc <small>real‑time net · break aware</small></h1>
+    <h1>⏳ workman's clock <small>real‑time net · break aware</small></h1>
+    <p class="subtitle">Track your earnings in real time — multiple jobs, breaks, bonuses, and expenses all in one place.</p>
 
     <!-- live display -->
     <div class="live-panel" id="livePanel">
@@ -66,17 +101,17 @@
             <!-- default main job (always present) -->
             <div class="income-card" id="incomeBase">
                 <div class="row">
-                    <div class="field"><label>💰 rate ($/h)</label><input type="number" id="mainRate" step="0.01" value="25.00"></div>
-                    <div class="field"><label>⏱️ start</label><input type="time" id="mainStart" value="09:00"></div>
-                    <div class="field"><label>⏱️ end</label><input type="time" id="mainEnd" value="17:00"></div>
-                    <div style="flex:1; min-width:200px;" class="break-fields">
-                        <div class="field"><label>🍽️ break start</label><input type="time" id="mainBreakStart" value="12:00"></div>
-                        <div class="field"><label>🍽️ break end</label><input type="time" id="mainBreakEnd" value="13:00"></div>
+                    <div class="field"><label>💰 rate ($/h)</label><input type="number" id="mainRate" step="0.01" value="25.00" min="0"><span class="field-msg" id="mainRate-msg">Enter a positive hourly rate.</span></div>
+                    <div class="field"><label>⏱️ start</label><input type="time" id="mainStart" value="09:00"><span class="field-msg" id="mainStart-msg">Start time is required.</span></div>
+                    <div class="field"><label>⏱️ end</label><input type="time" id="mainEnd" value="17:00"><span class="field-msg" id="mainEnd-msg">End time must be after start time.</span></div>
+                    <div style="flex:1; min-width:220px;" class="break-fields">
+                        <div class="field"><label>🍽️ break start <span style="font-weight:400;opacity:0.7">(optional)</span></label><input type="time" id="mainBreakStart" value="12:00"><span class="field-msg" id="mainBreakStart-msg">Provide both break times or leave both blank.</span></div>
+                        <div class="field"><label>🍽️ break end <span style="font-weight:400;opacity:0.7">(optional)</span></label><input type="time" id="mainBreakEnd" value="13:00"><span class="field-msg" id="mainBreakEnd-msg">Break end must be after break start.</span></div>
                     </div>
                 </div>
             </div>
         </div>
-        <button class="btn-add" id="addIncomeBtn" style="margin-top:12px;">➕ add another income</button>
+        <button class="btn-add" id="addIncomeBtn" style="margin-top:4px;">➕ add another income</button>
     </section>
 
     <!-- ONE‑TIME PAYMENTS -->
@@ -90,12 +125,12 @@
 
     <!-- RECURRING EXPENSES -->
     <section>
-        <div class="section-title">📉 recurring expenses (daily prorated)</div>
+        <div class="section-title">📉 recurring expenses <span style="font-size:0.85rem;font-weight:400;color:#5a7a88">(daily prorated)</span></div>
         <div id="expenseContainer">
             <!-- default expense example -->
             <div class="expense-card" id="expenseBase">
                 <div class="row">
-                    <div class="field"><label>💵 amount ($)</label><input type="number" id="expenseAmount" step="0.01" value="15.00"></div>
+                    <div class="field"><label>💵 amount ($)</label><input type="number" id="expenseAmount" step="0.01" value="15.00" min="0"><span class="field-msg" id="expenseAmount-msg">Enter a positive expense amount.</span></div>
                     <div class="field"><label>📆 frequency</label>
                         <select id="expenseFreq">
                             <option value="daily">daily</option>
@@ -110,262 +145,516 @@
         <button class="btn-add" id="addExpenseBtn">➕ add expense</button>
     </section>
 
+    <!-- CALCULATE BUTTON -->
+    <button class="btn-calculate" id="calcBtn">🧮 Calculate &amp; show breakdown</button>
+
+    <!-- VALIDATION SUMMARY -->
+    <div class="validation-box" id="validationBox">
+        <div class="validation-title">&#9888;&#65039; Please fix the following before calculating:</div>
+        <ul id="validationList"></ul>
+    </div>
+
+    <!-- BREAKDOWN PANEL -->
+    <div class="breakdown-panel" id="breakdownPanel">
+        <h2>&#128202; Full Earnings Breakdown</h2>
+        <div id="breakdownContent"></div>
+    </div>
+
     <div class="footer-note">
-        ⏱️ updates every second · breaks exclude work · multiple incomes stack · expenses are continuously subtracted
+        ⏱️ live panel updates every second · click <strong>Calculate</strong> for a detailed breakdown · breaks exclude work time · multiple incomes stack · expenses are continuously subtracted
     </div>
 </div>
 
 <script>
-    (function() {
-        // ---------- helpers ----------
-        function minutesSinceMidnight(date) {
-            return date.getHours() * 60 + date.getMinutes();
-        }
+(function() {
 
-        // parse time input "HH:MM" to minutes (or null if empty)
-        function parseTimeInput(value) {
-            if (!value) return null;
-            const parts = value.split(':');
-            if (parts.length !== 2) return null;
-            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-        }
+    // ── helpers ──────────────────────────────────────────────────────────────
 
-        // get active minutes for one income stream up to current minute (nowMin)
-        function activeMinutesForIncome(nowMin, rate, startMin, endMin, breakStartMin, breakEndMin) {
-            if (startMin === null || endMin === null || rate === 0) return 0;
-            // ensure work period is valid (assume within same day)
-            if (startMin >= endMin) return 0; // invalid, ignore
+    function minutesSinceMidnight(date) {
+        return date.getHours() * 60 + date.getMinutes();
+    }
 
-            let intervals = [];
-            // if break is defined and inside work period
-            if (breakStartMin !== null && breakEndMin !== null && breakStartMin < breakEndMin) {
-                // break must be within [start, end] to matter – clip to work boundaries
-                const effectiveBreakStart = Math.max(breakStartMin, startMin);
-                const effectiveBreakEnd = Math.min(breakEndMin, endMin);
-                if (effectiveBreakStart < effectiveBreakEnd) {
-                    // first part: start -> breakStart
-                    if (startMin < effectiveBreakStart) {
-                        intervals.push([startMin, effectiveBreakStart]);
-                    }
-                    // second part: breakEnd -> end
-                    if (effectiveBreakEnd < endMin) {
-                        intervals.push([effectiveBreakEnd, endMin]);
-                    }
-                } else {
-                    // break outside or invalid, whole work period
-                    intervals.push([startMin, endMin]);
-                }
+    function parseTimeInput(value) {
+        if (!value) return null;
+        const parts = value.split(':');
+        if (parts.length !== 2) return null;
+        const h = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
+        if (isNaN(h) || isNaN(m)) return null;
+        return h * 60 + m;
+    }
+
+    function fmtMoney(n) {
+        const sign = n < 0 ? '-' : '';
+        return sign + '$' + Math.abs(n).toFixed(2);
+    }
+
+    function fmtTime(mins) {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // Returns active minutes worked up to nowMin (breaks excluded)
+    function activeMinutesForIncome(nowMin, start, end, breakStart, breakEnd) {
+        if (start === null || end === null) return 0;
+        if (start >= end) return 0;
+
+        let intervals = [];
+        if (breakStart !== null && breakEnd !== null && breakStart < breakEnd) {
+            const effBs = Math.max(breakStart, start);
+            const effBe = Math.min(breakEnd, end);
+            if (effBs < effBe) {
+                if (start < effBs)  intervals.push([start, effBs]);
+                if (effBe < end)    intervals.push([effBe, end]);
             } else {
-                intervals.push([startMin, endMin]);
+                intervals.push([start, end]);
             }
+        } else {
+            intervals.push([start, end]);
+        }
 
-            let totalMinutes = 0;
-            for (let [segStart, segEnd] of intervals) {
-                const overlapStart = Math.max(segStart, 0);
-                const overlapEnd = Math.min(segEnd, nowMin);
-                if (overlapEnd > overlapStart) {
-                    totalMinutes += (overlapEnd - overlapStart);
-                }
+        let total = 0;
+        for (const [s, e] of intervals) {
+            const os = Math.max(s, 0);
+            const oe = Math.min(e, nowMin);
+            if (oe > os) total += oe - os;
+        }
+        return total;
+    }
+
+    function isActiveNow(nowMin, start, end, breakStart, breakEnd) {
+        if (start === null || end === null) return false;
+        if (nowMin < start || nowMin >= end) return false;
+        if (breakStart !== null && breakEnd !== null && breakStart < breakEnd) {
+            if (nowMin >= breakStart && nowMin < breakEnd) return false;
+        }
+        return true;
+    }
+
+    // ── data collectors ──────────────────────────────────────────────────────
+
+    function getAllIncomes() {
+        const incomes = [];
+        const mainRate = parseFloat(document.getElementById('mainRate')?.value || 0);
+        const mainStart = parseTimeInput(document.getElementById('mainStart')?.value);
+        const mainEnd = parseTimeInput(document.getElementById('mainEnd')?.value);
+        const mainBreakStart = parseTimeInput(document.getElementById('mainBreakStart')?.value);
+        const mainBreakEnd = parseTimeInput(document.getElementById('mainBreakEnd')?.value);
+        if (mainRate > 0) {
+            incomes.push({ label: 'Main Job', rate: mainRate, start: mainStart, end: mainEnd, breakStart: mainBreakStart, breakEnd: mainBreakEnd });
+        }
+
+        let idx = 2;
+        document.querySelectorAll('#incomesContainer .income-card').forEach(card => {
+            if (card.id === 'incomeBase') return;
+            const rateInput   = card.querySelector('.income-rate');
+            const startInput  = card.querySelector('.income-start');
+            const endInput    = card.querySelector('.income-end');
+            const bsInput     = card.querySelector('.income-break-start');
+            const beInput     = card.querySelector('.income-break-end');
+            const nameInput   = card.querySelector('.income-name');
+            if (!rateInput || !startInput || !endInput) return;
+            const rate = parseFloat(rateInput.value) || 0;
+            const start = parseTimeInput(startInput.value);
+            const end   = parseTimeInput(endInput.value);
+            const breakStart = parseTimeInput(bsInput?.value);
+            const breakEnd   = parseTimeInput(beInput?.value);
+            const label = nameInput?.value?.trim() || ('Income #' + idx);
+            if (rate > 0 && start !== null && end !== null) {
+                incomes.push({ label, rate, start, end, breakStart, breakEnd });
             }
-            return totalMinutes;
-        }
+            idx++;
+        });
+        return incomes;
+    }
 
-        // get current active hourly rate (now) for one income
-        function isActiveNow(nowMin, startMin, endMin, breakStartMin, breakEndMin) {
-            if (startMin === null || endMin === null) return false;
-            if (nowMin < startMin || nowMin >= endMin) return false;
-            if (breakStartMin !== null && breakEndMin !== null && breakStartMin < breakEndMin) {
-                const inBreak = (nowMin >= breakStartMin && nowMin < breakEndMin);
-                if (inBreak) return false;
+    function getAllOnetimePayments() {
+        const payments = [];
+        document.querySelectorAll('#onetimeContainer .onetime-card').forEach(card => {
+            const amount = parseFloat(card.querySelector('.onetime-amount')?.value) || 0;
+            const datetimeStr = card.querySelector('.onetime-datetime')?.value;
+            const label = card.querySelector('.onetime-label')?.value?.trim() || 'One-time payment';
+            if (amount > 0 && datetimeStr) {
+                payments.push({ label, amount, datetime: new Date(datetimeStr) });
             }
-            return true;
-        }
+        });
+        return payments;
+    }
 
-        // ---------- collect dynamic data ----------
-        function getAllIncomes() {
-            const incomes = [];
-            // base main job (always present)
-            const mainRate = parseFloat(document.getElementById('mainRate')?.value || 0);
-            const mainStart = parseTimeInput(document.getElementById('mainStart')?.value);
-            const mainEnd = parseTimeInput(document.getElementById('mainEnd')?.value);
-            const mainBreakStart = parseTimeInput(document.getElementById('mainBreakStart')?.value);
-            const mainBreakEnd = parseTimeInput(document.getElementById('mainBreakEnd')?.value);
-            if (mainRate > 0) {
-                incomes.push({
-                    rate: mainRate,
-                    start: mainStart,
-                    end: mainEnd,
-                    breakStart: mainBreakStart,
-                    breakEnd: mainBreakEnd
-                });
+    function getAllExpenses() {
+        const expenses = [];
+        document.querySelectorAll('#expenseContainer .expense-card').forEach(card => {
+            const amount = parseFloat(
+                card.querySelector('.expense-amount, #expenseAmount')?.value
+            ) || 0;
+            const freq = card.querySelector('.expense-freq, #expenseFreq')?.value;
+            const label = card.querySelector('.expense-label')?.value?.trim() || '';
+            if (amount > 0 && freq) {
+                let daily = amount;
+                if (freq === 'weekly')       daily = amount / 7;
+                else if (freq === 'monthly') daily = amount / 30;
+                const freqLabel = freq.charAt(0).toUpperCase() + freq.slice(1);
+                expenses.push({ label: label || freqLabel + ' expense', amount, freq, daily });
             }
+        });
+        return expenses;
+    }
 
-            // extra incomes from dynamic cards (they have class income-card and are not the base)
-            document.querySelectorAll('#incomesContainer .income-card').forEach(card => {
-                if (card.id === 'incomeBase') return; // skip base, already added
-                const rateInput = card.querySelector('.income-rate');
-                const startInput = card.querySelector('.income-start');
-                const endInput = card.querySelector('.income-end');
-                const breakStartInput = card.querySelector('.income-break-start');
-                const breakEndInput = card.querySelector('.income-break-end');
-                if (!rateInput || !startInput || !endInput) return;
-                const rate = parseFloat(rateInput.value) || 0;
-                const start = parseTimeInput(startInput.value);
-                const end = parseTimeInput(endInput.value);
-                const breakStart = parseTimeInput(breakStartInput?.value);
-                const breakEnd = parseTimeInput(breakEndInput?.value);
-                if (rate > 0 && start !== null && end !== null) {
-                    incomes.push({ rate, start, end, breakStart, breakEnd });
-                }
+    // ── live ticker ──────────────────────────────────────────────────────────
+
+    function updateDisplay() {
+        const now = new Date();
+        const nowMin = minutesSinceMidnight(now);
+        const todayStr = now.toDateString();
+
+        const incomes = getAllIncomes();
+        let activeRateNow = 0, totalEarnedToday = 0;
+        incomes.forEach(({ rate, start, end, breakStart, breakEnd }) => {
+            if (start === null || end === null) return;
+            if (isActiveNow(nowMin, start, end, breakStart, breakEnd)) activeRateNow += rate;
+            totalEarnedToday += (activeMinutesForIncome(nowMin, start, end, breakStart, breakEnd) / 60) * rate;
+        });
+
+        let onetimeToday = 0;
+        getAllOnetimePayments().forEach(p => {
+            if (p.datetime && p.datetime.toDateString() === todayStr && p.datetime <= now)
+                onetimeToday += p.amount;
+        });
+
+        const expenses = getAllExpenses();
+        const dailyExpense = expenses.reduce((s, e) => s + e.daily, 0);
+        const dayFraction  = (nowMin * 60 + now.getSeconds()) / 86400;
+        const expenseSoFar = dailyExpense * dayFraction;
+
+        const netEarnedToday = totalEarnedToday + onetimeToday - expenseSoFar;
+        const netHourly      = activeRateNow - (dailyExpense / 24);
+        const netPerSecond   = netHourly / 3600;
+        const netPerMinute   = netHourly / 60;
+
+        document.getElementById('perSec').innerText     = (netPerSecond * 100).toFixed(2);
+        document.getElementById('perMin').innerText     = netPerMinute.toFixed(2);
+        document.getElementById('perHour').innerText    = netHourly.toFixed(2);
+        document.getElementById('totalToday').innerText = netEarnedToday.toFixed(2);
+    }
+
+    // ── field-level validation ───────────────────────────────────────────────
+
+    function validateAll() {
+        const errors = [];
+
+        function markField(el, msgEl, ok, msg) {
+            if (!el) return;
+            if (ok) {
+                el.classList.remove('field-error');
+                if (msgEl) { msgEl.textContent = ''; msgEl.classList.remove('visible'); }
+            } else {
+                el.classList.add('field-error');
+                if (msgEl) { msgEl.textContent = msg; msgEl.classList.add('visible'); }
+                errors.push(msg);
+            }
+        }
+
+        // base income
+        const mainRateEl  = document.getElementById('mainRate');
+        const mainStartEl = document.getElementById('mainStart');
+        const mainEndEl   = document.getElementById('mainEnd');
+        const mainBsEl    = document.getElementById('mainBreakStart');
+        const mainBeEl    = document.getElementById('mainBreakEnd');
+
+        const mainRateVal  = parseFloat(mainRateEl?.value);
+        const mainStartVal = parseTimeInput(mainStartEl?.value);
+        const mainEndVal   = parseTimeInput(mainEndEl?.value);
+        const mainBsVal    = parseTimeInput(mainBsEl?.value);
+        const mainBeVal    = parseTimeInput(mainBeEl?.value);
+
+        markField(mainRateEl, document.getElementById('mainRate-msg'),
+            !isNaN(mainRateVal) && mainRateVal > 0, 'Main job: hourly rate must be a positive number.');
+        markField(mainStartEl, document.getElementById('mainStart-msg'),
+            mainStartVal !== null, 'Main job: start time is required.');
+        markField(mainEndEl, document.getElementById('mainEnd-msg'),
+            mainEndVal !== null && (mainStartVal === null || mainEndVal > mainStartVal),
+            'Main job: end time must be after start time.');
+        markField(mainBsEl, document.getElementById('mainBreakStart-msg'),
+            (mainBsVal === null) === (mainBeVal === null),
+            'Main job: provide both break times or leave both blank.');
+        markField(mainBeEl, document.getElementById('mainBreakEnd-msg'),
+            mainBsVal === null || mainBeVal === null || mainBeVal > mainBsVal,
+            'Main job: break end must be after break start.');
+
+        // dynamic income cards
+        document.querySelectorAll('#incomesContainer .income-card').forEach((card, i) => {
+            if (card.id === 'incomeBase') return;
+            const rateEl  = card.querySelector('.income-rate');
+            const startEl = card.querySelector('.income-start');
+            const endEl   = card.querySelector('.income-end');
+            const bsEl    = card.querySelector('.income-break-start');
+            const beEl    = card.querySelector('.income-break-end');
+            const rateVal  = parseFloat(rateEl?.value);
+            const startVal = parseTimeInput(startEl?.value);
+            const endVal   = parseTimeInput(endEl?.value);
+            const bsVal    = parseTimeInput(bsEl?.value);
+            const beVal    = parseTimeInput(beEl?.value);
+            const tag      = 'Income #' + (i + 1) + ':';
+            markField(rateEl, rateEl?.nextElementSibling,
+                !isNaN(rateVal) && rateVal > 0, tag + ' hourly rate must be positive.');
+            markField(startEl, startEl?.nextElementSibling,
+                startVal !== null, tag + ' start time is required.');
+            markField(endEl, endEl?.nextElementSibling,
+                endVal !== null && (startVal === null || endVal > startVal),
+                tag + ' end time must be after start time.');
+            if (bsEl) markField(bsEl, bsEl.nextElementSibling,
+                (bsVal === null) === (beVal === null),
+                tag + ' provide both break times or leave both blank.');
+            if (beEl) markField(beEl, beEl.nextElementSibling,
+                bsVal === null || beVal === null || beVal > bsVal,
+                tag + ' break end must be after break start.');
+        });
+
+        // one-time payments
+        document.querySelectorAll('#onetimeContainer .onetime-card').forEach((card, i) => {
+            const amtEl  = card.querySelector('.onetime-amount');
+            const dtEl   = card.querySelector('.onetime-datetime');
+            const amtVal = parseFloat(amtEl?.value);
+            const tag    = 'Payment #' + (i + 1) + ':';
+            markField(amtEl, amtEl?.nextElementSibling,
+                !isNaN(amtVal) && amtVal > 0, tag + ' amount must be a positive number.');
+            markField(dtEl, dtEl?.nextElementSibling,
+                dtEl?.value?.trim() !== '', tag + ' date & time is required.');
+        });
+
+        // expenses
+        document.querySelectorAll('#expenseContainer .expense-card').forEach((card, i) => {
+            const amtEl  = card.querySelector('.expense-amount, #expenseAmount');
+            const amtVal = parseFloat(amtEl?.value);
+            const tag    = 'Expense #' + (i + 1) + ':';
+            markField(amtEl, amtEl?.nextElementSibling,
+                !isNaN(amtVal) && amtVal > 0, tag + ' amount must be a positive number.');
+        });
+
+        return errors;
+    }
+
+    // ── breakdown renderer ───────────────────────────────────────────────────
+
+    function renderBreakdown() {
+        const now      = new Date();
+        const nowMin   = minutesSinceMidnight(now);
+        const todayStr = now.toDateString();
+
+        const incomes  = getAllIncomes();
+        const otPays   = getAllOnetimePayments();
+        const expenses = getAllExpenses();
+
+        let html = '';
+
+        // income streams
+        html += '<div class="bd-section">';
+        html += '<div class="bd-section-title">Income Streams</div>';
+        let totalGross = 0;
+        if (incomes.length === 0) {
+            html += '<div class="bd-row"><span class="bd-label" style="color:#888">No valid income streams configured.</span></div>';
+        }
+        incomes.forEach(({ label, rate, start, end, breakStart, breakEnd }) => {
+            const activeMins  = activeMinutesForIncome(nowMin, start, end, breakStart, breakEnd);
+            const earned      = (activeMins / 60) * rate;
+            totalGross       += earned;
+            const active      = isActiveNow(nowMin, start, end, breakStart, breakEnd);
+            const shiftStr    = (start !== null && end !== null) ? fmtTime(start) + ' \u2192 ' + fmtTime(end) : '\u2013';
+            const breakStr    = (breakStart !== null && breakEnd !== null)
+                                  ? ' \u00b7 break ' + fmtTime(breakStart) + '\u2013' + fmtTime(breakEnd) : '';
+            const workMins    = (start !== null && end !== null) ? (end - start) : 0;
+            const breakDur    = (breakStart !== null && breakEnd !== null && end !== null && start !== null)
+                                  ? Math.max(0, Math.min(breakEnd, end) - Math.max(breakStart, start)) : 0;
+            const netWorkMins = workMins - breakDur;
+            const statusPill  = active
+                ? '<span class="bd-status-pill active">\u25cf live</span>'
+                : '<span class="bd-status-pill inactive">\u23f8 inactive</span>';
+            html += '<div class="bd-row">'
+                + '<span class="bd-label">' + escHtml(label) + ' ' + statusPill
+                + '<span class="bd-sub">' + escHtml(shiftStr) + escHtml(breakStr)
+                + ' \u00b7 $' + rate.toFixed(2) + '/h \u00b7 ' + netWorkMins + ' min net shift \u00b7 ' + activeMins + ' min elapsed</span>'
+                + '</span>'
+                + '<span class="bd-value positive">' + fmtMoney(earned) + '</span>'
+                + '</div>';
+        });
+        html += '</div>';
+
+        // one-time payments
+        const otToday = otPays.filter(p => p.datetime && p.datetime.toDateString() === todayStr && p.datetime <= now);
+        html += '<div class="bd-section">';
+        html += '<div class="bd-section-title">One-Time Payments (today, already occurred)</div>';
+        let totalOT = 0;
+        if (otToday.length === 0) {
+            html += '<div class="bd-row"><span class="bd-label" style="color:#888">None for today.</span></div>';
+        }
+        otToday.forEach(p => {
+            totalOT += p.amount;
+            html += '<div class="bd-row">'
+                + '<span class="bd-label">' + escHtml(p.label)
+                + ' <span class="bd-sub">' + p.datetime.toLocaleTimeString() + '</span></span>'
+                + '<span class="bd-value positive">' + fmtMoney(p.amount) + '</span>'
+                + '</div>';
+        });
+        const otFuture = otPays.filter(p => !(p.datetime && p.datetime.toDateString() === todayStr && p.datetime <= now));
+        otFuture.forEach(p => {
+            const whenStr = p.datetime ? p.datetime.toLocaleString() : 'unset';
+            html += '<div class="bd-row" style="opacity:0.55">'
+                + '<span class="bd-label">' + escHtml(p.label)
+                + ' <span class="bd-sub">not yet / ' + escHtml(whenStr) + '</span></span>'
+                + '<span class="bd-value neutral">\u2014</span>'
+                + '</div>';
+        });
+        html += '</div>';
+
+        // expenses
+        const dailyExpense = expenses.reduce((s, e) => s + e.daily, 0);
+        const dayFraction  = (nowMin * 60 + now.getSeconds()) / 86400;
+        const expenseSoFar = dailyExpense * dayFraction;
+
+        html += '<div class="bd-section">';
+        html += '<div class="bd-section-title">Recurring Expenses</div>';
+        if (expenses.length === 0) {
+            html += '<div class="bd-row"><span class="bd-label" style="color:#888">No expenses configured.</span></div>';
+        }
+        expenses.forEach(({ label, amount, freq, daily }) => {
+            const proratedNow = daily * dayFraction;
+            html += '<div class="bd-row">'
+                + '<span class="bd-label">' + escHtml(label)
+                + ' <span class="bd-sub">$' + amount.toFixed(2) + ' ' + escHtml(freq)
+                + ' \u2192 $' + daily.toFixed(4) + '/day \u00b7 '
+                + (dayFraction*100).toFixed(1) + '% day elapsed</span></span>'
+                + '<span class="bd-value negative">-' + fmtMoney(proratedNow) + '</span>'
+                + '</div>';
+        });
+        if (expenses.length > 1) {
+            html += '<div class="bd-row" style="font-weight:600">'
+                + '<span class="bd-label">Total expenses so far</span>'
+                + '<span class="bd-value negative">-' + fmtMoney(expenseSoFar) + '</span>'
+                + '</div>';
+        }
+        html += '</div>';
+
+        // live rates
+        const totalActiveRate = incomes.reduce((s, inc) =>
+            s + (isActiveNow(nowMin, inc.start, inc.end, inc.breakStart, inc.breakEnd) ? inc.rate : 0), 0);
+        const netHourly = totalActiveRate - (dailyExpense / 24);
+        html += '<div class="bd-section">';
+        html += '<div class="bd-section-title">Live Rates Right Now</div>';
+        html += '<div class="bd-row"><span class="bd-label">Gross active rate</span><span class="bd-value neutral">$' + totalActiveRate.toFixed(2) + '/h</span></div>';
+        html += '<div class="bd-row"><span class="bd-label">Expense rate (avg)</span><span class="bd-value negative">-$' + (dailyExpense/24).toFixed(4) + '/h</span></div>';
+        html += '<div class="bd-row"><span class="bd-label">Net / hour</span><span class="bd-value ' + (netHourly>=0?'positive':'negative') + '">$' + netHourly.toFixed(2) + '</span></div>';
+        html += '<div class="bd-row"><span class="bd-label">Net / minute</span><span class="bd-value ' + (netHourly>=0?'positive':'negative') + '">$' + (netHourly/60).toFixed(4) + '</span></div>';
+        html += '<div class="bd-row"><span class="bd-label">Net / second</span><span class="bd-value ' + (netHourly>=0?'positive':'negative') + '">' + ((netHourly/3600)*100).toFixed(4) + '\u00a2</span></div>';
+        html += '</div>';
+
+        // net total
+        const netToday = totalGross + totalOT - expenseSoFar;
+        const totClass = netToday >= 0 ? 'pos' : 'neg';
+        html += '<div class="bd-total">'
+            + '<span class="bd-total-label">Net earned today<br><span style="font-size:0.8rem;opacity:0.7">as of ' + now.toLocaleTimeString() + '</span></span>'
+            + '<span class="bd-total-value ' + totClass + '">' + fmtMoney(netToday) + '</span>'
+            + '</div>';
+
+        document.getElementById('breakdownContent').innerHTML = html;
+        const panel = document.getElementById('breakdownPanel');
+        panel.classList.add('visible');
+        setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    }
+
+    // ── calculate button ─────────────────────────────────────────────────────
+
+    document.getElementById('calcBtn').addEventListener('click', function() {
+        document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+        document.querySelectorAll('.field-msg.visible').forEach(el => el.classList.remove('visible'));
+        document.querySelectorAll('.income-card, .expense-card, .onetime-card').forEach(c => c.classList.remove('has-error'));
+
+        const errors = validateAll();
+        const vBox  = document.getElementById('validationBox');
+        const vList = document.getElementById('validationList');
+
+        if (errors.length > 0) {
+            vList.innerHTML = errors.map(e => '<li>' + escHtml(e) + '</li>').join('');
+            vBox.classList.add('visible');
+            document.getElementById('breakdownPanel').classList.remove('visible');
+            document.querySelectorAll('.field-error').forEach(el => {
+                el.closest('.income-card, .expense-card, .onetime-card')?.classList.add('has-error');
             });
-            return incomes;
+            vBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            vBox.classList.remove('visible');
+            renderBreakdown();
         }
+    });
 
-        function getAllOnetimePayments() {
-            const payments = [];
-            document.querySelectorAll('#onetimeContainer .onetime-card').forEach(card => {
-                const amount = parseFloat(card.querySelector('.onetime-amount')?.value) || 0;
-                const datetimeStr = card.querySelector('.onetime-datetime')?.value;
-                if (amount > 0 && datetimeStr) {
-                    payments.push({ amount, datetime: new Date(datetimeStr) });
-                }
-            });
-            return payments;
-        }
+    // ── dynamic card creators ─────────────────────────────────────────────────
 
-        function getAllExpenses() {
-            let dailyTotal = 0;
-            document.querySelectorAll('#expenseContainer .expense-card').forEach(card => {
-                const amount = parseFloat(card.querySelector('.expense-amount')?.value) || 0;
-                const freq = card.querySelector('.expense-freq')?.value;
-                if (amount > 0 && freq) {
-                    if (freq === 'daily') dailyTotal += amount;
-                    else if (freq === 'weekly') dailyTotal += amount / 7;
-                    else if (freq === 'monthly') dailyTotal += amount / 30; // approximate
-                }
-            });
-            return dailyTotal;
-        }
+    function addIncomeCard() {
+        const container = document.getElementById('incomesContainer');
+        const newCard = document.createElement('div');
+        newCard.className = 'income-card';
+        newCard.innerHTML = ''
+            + '<div class="row">'
+            + '<div class="field" style="min-width:130px"><label>\uD83D\uDCDD label</label><input type="text" class="income-name" placeholder="e.g. Freelance"></div>'
+            + '<div class="field"><label>\uD83D\uDCB0 rate ($/h)</label><input type="number" class="income-rate" step="0.01" value="20.00" min="0"><span class="field-msg"></span></div>'
+            + '<div class="field"><label>\u23F1\uFE0F start</label><input type="time" class="income-start" value="10:00"><span class="field-msg"></span></div>'
+            + '<div class="field"><label>\u23F1\uFE0F end</label><input type="time" class="income-end" value="18:00"><span class="field-msg"></span></div>'
+            + '<div style="flex:1; min-width:220px;" class="break-fields">'
+            + '<div class="field"><label>\uD83C\uDF7D\uFE0F break start <span style="font-weight:400;opacity:0.7">(optional)</span></label><input type="time" class="income-break-start"><span class="field-msg"></span></div>'
+            + '<div class="field"><label>\uD83C\uDF7D\uFE0F break end <span style="font-weight:400;opacity:0.7">(optional)</span></label><input type="time" class="income-break-end"><span class="field-msg"></span></div>'
+            + '</div>'
+            + '<button class="btn-remove" onclick="this.closest(\'.income-card\').remove()">remove</button>'
+            + '</div>';
+        container.appendChild(newCard);
+    }
 
-        // ---------- main calculation & update ----------
-        function updateDisplay() {
-            const now = new Date();
-            const nowMin = minutesSinceMidnight(now);
-            const todayStr = now.toDateString();
+    function addOnetimeCard() {
+        const container = document.getElementById('onetimeContainer');
+        const newCard   = document.createElement('div');
+        newCard.className = 'onetime-card';
+        const now = new Date();
+        const defaultDt = now.getFullYear() + '-'
+            + String(now.getMonth()+1).padStart(2,'0') + '-'
+            + String(now.getDate()).padStart(2,'0') + 'T'
+            + String(now.getHours()).padStart(2,'0') + ':00';
+        newCard.innerHTML = ''
+            + '<div class="row">'
+            + '<div class="field" style="min-width:130px"><label>\uD83D\uDCDD label</label><input type="text" class="onetime-label" placeholder="e.g. Bonus"></div>'
+            + '<div class="field"><label>\uD83D\uDCB5 amount ($)</label><input type="number" class="onetime-amount" step="0.01" value="100.00" min="0"><span class="field-msg"></span></div>'
+            + '<div class="field"><label>\uD83D\uDCC5 date &amp; time</label><input type="datetime-local" class="onetime-datetime" value="' + defaultDt + '"><span class="field-msg"></span></div>'
+            + '<button class="btn-remove" onclick="this.closest(\'.onetime-card\').remove()">remove</button>'
+            + '</div>';
+        container.appendChild(newCard);
+    }
 
-            // 1. collect incomes
-            const incomes = getAllIncomes();
+    function addExpenseCard() {
+        const container = document.getElementById('expenseContainer');
+        const newCard   = document.createElement('div');
+        newCard.className = 'expense-card';
+        newCard.innerHTML = ''
+            + '<div class="row">'
+            + '<div class="field" style="min-width:130px"><label>\uD83D\uDCDD label</label><input type="text" class="expense-label" placeholder="e.g. Rent"></div>'
+            + '<div class="field"><label>\uD83D\uDCB5 amount ($)</label><input type="number" class="expense-amount" step="0.01" value="10.00" min="0"><span class="field-msg"></span></div>'
+            + '<div class="field"><label>\uD83D\uDCC6 frequency</label>'
+            + '<select class="expense-freq"><option value="daily">daily</option><option value="weekly">weekly</option><option value="monthly">monthly</option></select>'
+            + '</div>'
+            + '<button class="btn-remove" onclick="this.closest(\'.expense-card\').remove()">remove</button>'
+            + '</div>';
+        container.appendChild(newCard);
+    }
 
-            // 2. compute total active rate now & cumulative earnings
-            let activeRateNow = 0;
-            let totalEarnedToday = 0;
+    document.getElementById('addIncomeBtn').addEventListener('click', addIncomeCard);
+    document.getElementById('addOnetimeBtn').addEventListener('click', addOnetimeCard);
+    document.getElementById('addExpenseBtn').addEventListener('click', addExpenseCard);
 
-            incomes.forEach(inc => {
-                const { rate, start, end, breakStart, breakEnd } = inc;
-                if (start === null || end === null) return;
-                // active now?
-                if (isActiveNow(nowMin, start, end, breakStart, breakEnd)) {
-                    activeRateNow += rate;
-                }
-                // cumulative earnings from midnight to now
-                const activeMins = activeMinutesForIncome(nowMin, rate, start, end, breakStart, breakEnd);
-                totalEarnedToday += (activeMins / 60) * rate;
-            });
-
-            // 3. one‑time payments today (with time <= now)
-            const onetimeList = getAllOnetimePayments();
-            let onetimeToday = 0;
-            onetimeList.forEach(p => {
-                if (p.datetime && p.datetime.toDateString() === todayStr && p.datetime <= now) {
-                    onetimeToday += p.amount;
-                }
-            });
-
-            // 4. expenses (daily prorated)
-            const dailyExpense = getAllExpenses(); // total daily expense rate ($/day)
-            const dayProgress = nowMin / 1440; // fraction of day passed
-            const expenseSoFar = dailyExpense * dayProgress;
-
-            // 5. net totals
-            const netEarnedToday = totalEarnedToday + onetimeToday - expenseSoFar;
-
-            // 6. net rates (instant)
-            const netHourly = activeRateNow - (dailyExpense / 24);
-            const netPerSecond = netHourly / 3600;
-            const netPerMinute = netHourly / 60;
-
-            // format
-            document.getElementById('perSec').innerText = (netPerSecond * 100).toFixed(2); // cents
-            document.getElementById('perMin').innerText = netPerMinute.toFixed(2);
-            document.getElementById('perHour').innerText = netHourly.toFixed(2);
-            document.getElementById('totalToday').innerText = netEarnedToday.toFixed(2);
-        }
-
-        // ---------- dynamic field creators ----------
-        function addIncomeCard() {
-            const container = document.getElementById('incomesContainer');
-            const newCard = document.createElement('div');
-            newCard.className = 'income-card';
-            newCard.innerHTML = `
-                <div class="row">
-                    <div class="field"><label>💰 rate ($/h)</label><input type="number" class="income-rate" step="0.01" value="20.00"></div>
-                    <div class="field"><label>⏱️ start</label><input type="time" class="income-start" value="10:00"></div>
-                    <div class="field"><label>⏱️ end</label><input type="time" class="income-end" value="18:00"></div>
-                    <div style="flex:1; min-width:200px;" class="break-fields">
-                        <div class="field"><label>🍽️ break start</label><input type="time" class="income-break-start"></div>
-                        <div class="field"><label>🍽️ break end</label><input type="time" class="income-break-end"></div>
-                    </div>
-                    <button class="btn-remove" onclick="this.closest('.income-card').remove()">remove</button>
-                </div>
-            `;
-            container.appendChild(newCard);
-        }
-
-        function addOnetimeCard() {
-            const container = document.getElementById('onetimeContainer');
-            const newCard = document.createElement('div');
-            newCard.className = 'onetime-card';
-            newCard.innerHTML = `
-                <div class="row">
-                    <div class="field"><label>💵 amount ($)</label><input type="number" class="onetime-amount" step="0.01" value="100.00"></div>
-                    <div class="field"><label>📅 date & time</label><input type="datetime-local" class="onetime-datetime"></div>
-                    <button class="btn-remove" onclick="this.closest('.onetime-card').remove()">remove</button>
-                </div>
-            `;
-            container.appendChild(newCard);
-        }
-
-        function addExpenseCard() {
-            const container = document.getElementById('expenseContainer');
-            const newCard = document.createElement('div');
-            newCard.className = 'expense-card';
-            newCard.innerHTML = `
-                <div class="row">
-                    <div class="field"><label>💵 amount ($)</label><input type="number" class="expense-amount" step="0.01" value="10.00"></div>
-                    <div class="field"><label>📆 frequency</label>
-                        <select class="expense-freq">
-                            <option value="daily">daily</option>
-                            <option value="weekly">weekly</option>
-                            <option value="monthly">monthly</option>
-                        </select>
-                    </div>
-                    <button class="btn-remove" onclick="this.closest('.expense-card').remove()">remove</button>
-                </div>
-            `;
-            container.appendChild(newCard);
-        }
-
-        // attach event listeners to buttons
-        document.getElementById('addIncomeBtn').addEventListener('click', addIncomeCard);
-        document.getElementById('addOnetimeBtn').addEventListener('click', addOnetimeCard);
-        document.getElementById('addExpenseBtn').addEventListener('click', addExpenseCard);
-
-        // initial example one‑time (optional)
-        addOnetimeCard(); // adds one empty card – user can fill
-        // but we want maybe a default? we'll just leave it as is, user can set.
-
-        // start live updates every 1000ms
-        setInterval(updateDisplay, 1000);
-        updateDisplay(); // immediate first draw
-    })();
-</
+    setInterval(updateDisplay, 1000);
+    updateDisplay();
+})();
+</script>
+</body>
+</html>
